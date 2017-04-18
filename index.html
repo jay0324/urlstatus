@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>網站檢查</title>
+    <link rel="stylesheet" href="_css/style.css" />
+    <script type="text/javascript" src="_js/jquery.min.js"></script>
+    <script type="text/javascript">
+	    $(function() {
+	    	$("#check_btn").click(function(){
+	    		var page = $("#page").val();
+	    		var fileMsg = "檢查失敗";
+	    		var url_arry = (page.indexOf('\n') != -1)?page.split('\n'):[page];
+	    		var max_check_amt = url_arry.length-1;
+	    		var check = $("#check").val();
+	    		var current = 0;
+	    		var echo = "#message";
+	    		var processStage = "#stage";
+	    		var outputPannel = "#output_result";
+
+	    		$(echo).html("檢查中...<br>");
+	    		$(outputPannel).val("");
+
+	    		fnCheck(url_arry,max_check_amt,check,current,echo,processStage,outputPannel);
+
+	    		//console.log(url_arry);
+	    	})
+
+	    	//沒問題
+	    	$("#filter-ok").click(function(){
+	    		$("#message .result-item").hide();
+	    		$("#message .ok").show();
+	    	})
+
+	    	//有問題
+	    	$("#filter-not-ok").click(function(){
+	    		$("#message .result-item").hide();
+	    		$("#message .not-ok").show();
+	    	})
+
+	    	//顯示全部
+	    	$("#filter-all").click(function(){
+	    		$("#message .result-item").show();
+	    	})
+
+	    	$("#output_btn").click(function(){
+	    		if ($("#output").css("display") == 'block'){
+	    			$(this).text("輸出404列表");
+	    			$("#output").hide(200);
+	    		}else{
+	    			$(this).text('隱藏404列表');
+	    			$("#output").show(200);
+	    		}
+	    		
+	    	})
+
+	    })
+
+	    //送交檢查程序
+	    function fnCheck(url_arry,max_check_amt,check,current,echo,processStage,outputPannel){
+	    	$.ajax({
+						type: 'POST',
+						url: '_process/check.php?action=check',
+						cache: false,
+						data: {
+								"page": encodeURIComponent(url_arry[current]),
+								"check": encodeURIComponent(check)
+							}
+					}).done(function( data ) {
+						var jdata = $.parseJSON(data);
+						var string = '<div class="'+jdata["class"]+' result-item">'+jdata["status"]+': ('+jdata["time"]+') 檢查['+jdata["url"]+']<br></div>';
+						$(echo).append(string);
+						
+						if (jdata["class"] == 'not-ok') {
+							$(outputPannel).val($(outputPannel).val()+jdata['url']+'\n');
+						}
+
+						current++;
+						if (current < max_check_amt) fnCheck(url_arry,max_check_amt,check,current,echo,processStage,outputPannel);
+
+						var processStageCount = Math.round((current/max_check_amt)*100)+'%';
+						$(processStage).text(processStageCount);
+
+					}).fail(function( textStatus ) {
+						$(echo).append(failMsg+": "+textStatus);
+						current++;
+						if (current < max_check_amt) fnCheck(url_arry,max_check_amt,check,current,echo,processStage,outputPannel);
+
+						var processStageCount = Math.round((current/max_check_amt)*100)+'%';
+						$(processStage).text(processStageCount);
+					});
+	    }
+
+    </script>
+</head>
+
+<body>
+    <div id="check_form">
+        <h1>網址檢查</h1>
+        <label for="index_page">網址:
+            <textarea id="page" name="page"></textarea>
+        </label>
+        <button id="check_btn">檢查</button> <button id="output_btn">輸出404列表</button>
+	    <div id="output">
+	    	<textarea id="output_result" name="output_result" id="" cols="30" rows="10"></textarea>
+	    </div>
+    </div>
+    <div id="result">
+    	<h1>檢查結果</h1>
+    	<div id="process-wrap">檢查進度: <span id="stage">0%</span></div>
+    	<div id="filter-wrap">
+    		<button id="filter-all">全部</button>
+    		<button id="filter-ok">沒問題</button>
+    		<button id="filter-not-ok">有問題</button>
+    	</div>
+    	<div id="message">
+			此程式可用來批量檢查網址的狀態<br>
+			請於上方"網址檢查"置入您預檢查的網址分行置入，然後案檢查即可<br>
+    	</div>
+    </div>
+
+</body>
+
+</html>
