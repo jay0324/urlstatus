@@ -9,9 +9,9 @@
     <script type="text/javascript">
 	    $(function() {
 	    	$("#check_btn").click(function(){
-	    		var page = $("#page").val();
+	    		var page = ($("#page").val().slice(-1) !== '\n')?$("#page").val()+'\n':$("#page").val();
 	    		var fileMsg = "檢查失敗";
-	    		var url_arry = (page.indexOf('\n') != -1)?page.split('\n'):[page];
+	    		var url_arry = (page.indexOf('\n') !== -1)?page.split('\n'):[page];
 	    		var max_check_amt = url_arry.length-1;
 	    		var check = $("#check").val();
 	    		var current = 0;
